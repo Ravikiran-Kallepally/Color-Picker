@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Picker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <circle cx="12" cy="12" r="4" fill="currentColor"/>
+        </svg>
+        <span class="header-title">Color Picker</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="settingsBtn" title="Settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Tabs -->
+    <nav class="tabs">
+      <button class="tab active" data-tab="picker">Picker</button>
+      <button class="tab" data-tab="history">History</button>
+      <button class="tab" data-tab="palettes">Palettes</button>
+    </nav>
+
+    <!-- Picker Tab -->
+    <div class="tab-content active" id="tab-picker">
+      <!-- Eyedropper Button -->
+      <div class="eyedropper-section">
+        <button class="eyedropper-btn" id="eyedropperBtn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 13.5V20a2 2 0 0 0 2 2h.5"/><path d="M20.97 5.03a3.1 3.1 0 0 0-4.39 0L5.38 16.22a.99.99 0 0 0-.28.5l-.79 3.17a.5.5 0 0 0 .62.62l3.17-.79a1 1 0 0 0 .5-.28L19.8 8.25a3.1 3.1 0 0 0 0-4.39z"/>
+          </svg>
+          Pick Color from Page
+        </button>
+      </div>
+
+      <!-- Color Display -->
+      <div class="color-display">
+        <div class="color-preview-large" id="colorPreviewLarge"></div>
+        <div class="color-info">
+          <div class="color-name" id="colorName">—</div>
+          <div class="luminance-bar">
+            <div class="luminance-fill" id="luminanceFill"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Native Color Input -->
+      <div class="native-picker-row">
+        <label class="native-picker-label">
+          <input type="color" id="nativeColorPicker" value="#3b82f6">
+          <span>Choose from palette</span>
+        </label>
+      </div>
+
+      <!-- Format Values -->
+      <div class="format-grid" id="formatGrid">
+        <div class="format-row" data-format="hex">
+          <span class="format-label">HEX</span>
+          <span class="format-value" id="hexValue">#3B82F6</span>
+          <button class="copy-btn" data-copy="hex" title="Copy HEX">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="format-row" data-format="rgb">
+          <span class="format-label">RGB</span>
+          <span class="format-value" id="rgbValue">rgb(59, 130, 246)</span>
+          <button class="copy-btn" data-copy="rgb" title="Copy RGB">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="format-row" data-format="hsl">
+          <span class="format-label">HSL</span>
+          <span class="format-value" id="hslValue">hsl(217, 91%, 60%)</span>
+          <button class="copy-btn" data-copy="hsl" title="Copy HSL">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="format-row" data-format="cmyk">
+          <span class="format-label">CMYK</span>
+          <span class="format-value" id="cmykValue">cmyk(76, 47, 0, 4)</span>
+          <button class="copy-btn" data-copy="cmyk" title="Copy CMYK">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="format-row" data-format="hsv">
+          <span class="format-label">HSV</span>
+          <span class="format-value" id="hsvValue">hsv(217, 76%, 96%)</span>
+          <button class="copy-btn" data-copy="hsv" title="Copy HSV">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Row -->
+      <div class="action-row">
+        <button class="action-btn primary" id="saveToHistoryBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+          Save Color
+        </button>
+        <button class="action-btn secondary" id="addToPaletteBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Add to Palette
+        </button>
+      </div>
+
+      <!-- Toast -->
+      <div class="toast" id="toast"></div>
+    </div>
+
+    <!-- History Tab -->
+    <div class="tab-content" id="tab-history">
+      <div class="section-header">
+        <span>Recent Colors</span>
+        <button class="text-btn danger" id="clearHistoryBtn">Clear All</button>
+      </div>
+      <div class="color-grid" id="historyGrid">
+        <div class="empty-state">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+          <p>No colors yet. Pick a color to start.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Palettes Tab -->
+    <div class="tab-content" id="tab-palettes">
+      <div class="section-header">
+        <span>My Palettes</span>
+        <button class="text-btn" id="newPaletteBtn">+ New</button>
+      </div>
+      <div id="palettesContainer">
+        <div class="empty-state">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <p>No palettes yet. Create one to organize colors.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Palette Modal -->
+  <div class="modal-overlay" id="paletteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span>New Palette</span>
+        <button class="icon-btn" id="closePaletteModal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <input class="modal-input" id="paletteNameInput" placeholder="Palette name (e.g. Brand Colors)" maxlength="40">
+      <div class="modal-footer">
+        <button class="action-btn secondary" id="cancelPaletteBtn">Cancel</button>
+        <button class="action-btn primary" id="createPaletteBtn">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add to Palette Modal -->
+  <div class="modal-overlay" id="addToPaletteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span>Add to Palette</span>
+        <button class="icon-btn" id="closeAddModal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="palettePickList"></div>
+      <div class="modal-footer">
+        <button class="action-btn secondary" id="cancelAddBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
