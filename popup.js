@@ -67,6 +67,42 @@ function getLuminance({ r, g, b }) {
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
 
+function hslToRgb(h, s, l) {
+  const sn = s / 100, ln = l / 100;
+  const c = (1 - Math.abs(2 * ln - 1)) * sn;
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const m = ln - c / 2;
+  let r, g, b;
+  if (h < 60)       { r = c; g = x; b = 0; }
+  else if (h < 120) { r = x; g = c; b = 0; }
+  else if (h < 180) { r = 0; g = c; b = x; }
+  else if (h < 240) { r = 0; g = x; b = c; }
+  else if (h < 300) { r = x; g = 0; b = c; }
+  else              { r = c; g = 0; b = x; }
+  return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255) };
+}
+
+function hslToHex(h, s, l) {
+  return rgbToHex(hslToRgb(h, s, l));
+}
+
+function getContrastRatio(lum1, lum2) {
+  const lighter = Math.max(lum1, lum2);
+  const darker  = Math.min(lum1, lum2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function getHarmonies(hex) {
+  const { h, s, l } = rgbToHsl(hexToRgb(hex));
+  return [
+    { label: 'Comp',  hex: hslToHex((h + 180) % 360, s, l) },
+    { label: 'Ana−',  hex: hslToHex((h - 30 + 360) % 360, s, l) },
+    { label: 'Ana+',  hex: hslToHex((h + 30) % 360, s, l) },
+    { label: 'Tri 1', hex: hslToHex((h + 120) % 360, s, l) },
+    { label: 'Tri 2', hex: hslToHex((h + 240) % 360, s, l) },
+  ];
+}
+
 function getColorName(hex) {
   const named = {
     '#FF0000': 'Red', '#00FF00': 'Lime', '#0000FF': 'Blue',
@@ -130,12 +166,20 @@ function formatValues(hex) {
 let currentHex = '#3B82F6';
 let history = [];
 let palettes = [];
+let settings = { autoCopy: false, copyFormat: 'hex' };
 
 async function loadState() {
-  const data = await chrome.storage.local.get(['colorHistory', 'palettes', 'lastColor']);
+  const data = await chrome.storage.local.get(['colorHistory', 'palettes', 'lastColor', 'settings', 'pendingColor']);
   history = data.colorHistory || [];
   palettes = data.palettes || [];
   if (data.lastColor) currentHex = data.lastColor;
+  if (data.settings) settings = { ...settings, ...data.settings };
+  if (data.pendingColor) {
+    currentHex = data.pendingColor;
+    history = [data.pendingColor.toUpperCase(), ...history.filter(h => h.toUpperCase() !== data.pendingColor.toUpperCase())].slice(0, 60);
+    await chrome.storage.local.remove('pendingColor');
+    await saveHistory();
+  }
 }
 
 async function saveHistory() {
@@ -144,6 +188,10 @@ async function saveHistory() {
 
 async function savePalettes() {
   await chrome.storage.local.set({ palettes });
+}
+
+async function saveSettings() {
+  await chrome.storage.local.set({ settings });
 }
 
 // ── UI Updates ─────────────────────────────────────────────────────────────────
@@ -163,6 +211,53 @@ function updatePickerUI(hex) {
   document.getElementById('hslValue').textContent = vals.hsl;
   document.getElementById('hsvValue').textContent = vals.hsv;
   document.getElementById('cmykValue').textContent = vals.cmyk;
+
+  renderWcag(lum);
+  renderHarmonies(hex);
+}
+
+function renderWcag(lum) {
+  const vsWhite = getContrastRatio(lum, 1.0);
+  const vsBlack = getContrastRatio(lum, 0.0);
+
+  function badges(ratio) {
+    const aa  = ratio >= 4.5;
+    const aaa = ratio >= 7.0;
+    const aaLarge  = ratio >= 3.0;
+    return `
+      <span class="wcag-badge ${aaa  ? 'pass' : aa ? 'pass' : 'fail'}" title="Normal text (≥4.5)">AA${aa ? '✓' : '✗'}</span>
+      <span class="wcag-badge ${aaa  ? 'pass' : 'fail'}" title="Enhanced (≥7.0)">AAA${aaa ? '✓' : '✗'}</span>
+    `;
+  }
+
+  document.getElementById('wcagRows').innerHTML = `
+    <div class="wcag-row">
+      <div class="wcag-swatch" style="background:#fff;border:1px solid rgba(255,255,255,0.15)"></div>
+      <span class="wcag-on">on White</span>
+      <span class="wcag-ratio">${vsWhite.toFixed(1)}:1</span>
+      ${badges(vsWhite)}
+    </div>
+    <div class="wcag-row">
+      <div class="wcag-swatch" style="background:#000"></div>
+      <span class="wcag-on">on Black</span>
+      <span class="wcag-ratio">${vsBlack.toFixed(1)}:1</span>
+      ${badges(vsBlack)}
+    </div>
+  `;
+}
+
+function renderHarmonies(hex) {
+  const harmonies = getHarmonies(hex);
+  document.getElementById('harmoniesSwatches').innerHTML = harmonies.map(h => `
+    <div class="harmony-item" data-hex="${h.hex}" title="${h.label}: ${h.hex.toUpperCase()}">
+      <div class="harmony-swatch" style="background:${h.hex}"></div>
+      <span class="harmony-label">${h.label}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('harmoniesSwatches').querySelectorAll('.harmony-item').forEach(el => {
+    el.addEventListener('click', () => setColor(el.dataset.hex));
+  });
 }
 
 function renderHistory() {
@@ -203,6 +298,9 @@ function renderPalettes() {
       <div class="palette-card-header">
         <span class="palette-name">${escHtml(palette.name)}</span>
         <div class="palette-actions">
+          <button class="icon-btn export-palette-btn" data-pi="${pi}" title="Export as CSS variables">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
           <button class="icon-btn delete-palette-btn" data-pi="${pi}" title="Delete palette">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M10,11v6"/><path d="M14,11v6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
           </button>
@@ -217,6 +315,18 @@ function renderPalettes() {
       </div>
     </div>
   `).join('');
+
+  container.querySelectorAll('.export-palette-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pi = Number(btn.dataset.pi);
+      const p = palettes[pi];
+      if (p.colors.length === 0) { showToast('Palette is empty'); return; }
+      const slug = p.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const css = ':root {\n' + p.colors.map((hex, i) => `  --${slug}-${i + 1}: ${hex};`).join('\n') + '\n}';
+      copyToClipboard(css);
+      showToast('Copied as CSS variables');
+    });
+  });
 
   container.querySelectorAll('.delete-palette-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -285,7 +395,13 @@ async function launchEyedropper() {
     if (result?.sRGBHex) {
       setColor(result.sRGBHex);
       await addToHistory(result.sRGBHex);
-      showToast('Color picked!');
+      if (settings.autoCopy) {
+        const vals = formatValues(result.sRGBHex);
+        const text = settings.copyFormat === 'hex' ? vals.hex : vals[settings.copyFormat];
+        copyToClipboard(text);
+      } else {
+        showToast('Color picked!');
+      }
     }
   } catch (e) {
     // User cancelled — no-op
@@ -435,12 +551,44 @@ async function init() {
     if (e.target === e.currentTarget) closeAddToPaletteModal();
   });
 
-  // Listen for colors picked via content script fallback
+  // Settings panel
+  const settingsPanel = document.getElementById('settingsPanel');
+  const autoCopyToggle = document.getElementById('autoCopyToggle');
+  const copyFormatSelect = document.getElementById('copyFormatSelect');
+
+  function openSettings() {
+    autoCopyToggle.checked = settings.autoCopy;
+    copyFormatSelect.value = settings.copyFormat;
+    settingsPanel.classList.add('open');
+  }
+  function closeSettings() {
+    settingsPanel.classList.remove('open');
+  }
+
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
+  document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings);
+
+  autoCopyToggle.addEventListener('change', async () => {
+    settings.autoCopy = autoCopyToggle.checked;
+    await saveSettings();
+  });
+  copyFormatSelect.addEventListener('change', async () => {
+    settings.copyFormat = copyFormatSelect.value;
+    await saveSettings();
+  });
+
+  // Listen for colors picked via content script (keyboard shortcut path)
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === 'COLOR_PICKED' && msg.hex) {
       setColor(msg.hex);
       addToHistory(msg.hex);
-      showToast('Color picked!');
+      if (settings.autoCopy) {
+        const vals = formatValues(msg.hex);
+        const text = settings.copyFormat === 'hex' ? vals.hex : vals[settings.copyFormat];
+        copyToClipboard(text);
+      } else {
+        showToast('Color picked!');
+      }
     }
   });
 }

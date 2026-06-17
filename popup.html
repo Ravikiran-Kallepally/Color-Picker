@@ -103,6 +103,18 @@
         </div>
       </div>
 
+      <!-- WCAG Contrast -->
+      <div class="wcag-section">
+        <div class="sub-label">CONTRAST</div>
+        <div class="wcag-rows" id="wcagRows"></div>
+      </div>
+
+      <!-- Color Harmonies -->
+      <div class="harmonies-section">
+        <div class="sub-label">HARMONIES</div>
+        <div class="harmonies-swatches" id="harmoniesSwatches"></div>
+      </div>
+
       <!-- Action Row -->
       <div class="action-row">
         <button class="action-btn primary" id="saveToHistoryBtn">
@@ -179,6 +191,46 @@
         <button class="action-btn secondary" id="cancelAddBtn">Cancel</button>
       </div>
     </div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <button class="icon-btn" id="closeSettingsBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+      </button>
+      <span class="settings-title">Settings</span>
+    </div>
+    <div class="settings-body">
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <span>Auto-copy on pick</span>
+          <span class="settings-desc">Instantly copy color when eyedropper picks</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="autoCopyToggle">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+      </div>
+      <div class="settings-row" id="copyFormatRow">
+        <span>Copy format</span>
+        <select class="settings-select" id="copyFormatSelect">
+          <option value="hex">HEX</option>
+          <option value="rgb">RGB</option>
+          <option value="hsl">HSL</option>
+          <option value="hsv">HSV</option>
+          <option value="cmyk">CMYK</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <span>Keyboard shortcut</span>
+          <span class="settings-desc">Pick color from any page</span>
+        </div>
+        <kbd class="kbd">Alt+Shift+C</kbd>
+      </div>
+    </div>
+    <div class="settings-version">Color Picker Remastered v1.1.0</div>
   </div>
 
   <script src="popup.js"></script>

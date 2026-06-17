@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Color Picker — Eyedropper & HEX Converter",
-  "version": "1.0.0",
-  "description": "Pick any color from any webpage. Convert HEX, RGB, HSL, CMYK. Save palettes. Free eyedropper tool.",
+  "name": "Color Picker Remastered",
+  "version": "1.1.0",
+  "description": "The best color picker for designers & devs. Eyedropper, HEX/RGB/HSL/CMYK converter, WCAG contrast checker, color harmonies, palettes & more.",
   "permissions": [
     "activeTab",
     "scripting",
@@ -24,6 +24,14 @@
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "commands": {
+    "pick-color": {
+      "suggested_key": {
+        "default": "Alt+Shift+C"
+      },
+      "description": "Pick a color from the current page"
+    }
   },
   "background": {
     "service_worker": "background.js"
